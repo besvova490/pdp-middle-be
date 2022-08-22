@@ -1,5 +1,10 @@
+const { UserInputError } = require('apollo-server-errors');
+
 //  controller
 const userController = require('../controllers/user');
+
+// helpers
+const { verifyToken } = require('../helpers/jwtTokensHelpers');
 
 async function getUsersList() {
   const resp = await userController.getUsers();
@@ -21,6 +26,65 @@ async function getProfile(parent, args, context) {
   return resp;
 }
 
+async function login(_, args) {
+  const { email, password } = args.data;
+
+  const {
+    accessToken,
+    refreshToken,
+    error,
+    password: passwordError,
+    details,
+  } = await userController.login({ email, password });
+
+  if (error && details) {
+    throw new UserInputError(details, { details });
+  }
+  if (error && passwordError) {
+    throw new UserInputError(passwordError, { password: passwordError });
+  }
+
+  return {
+    accessToken,
+    refreshToken,
+  };
+}
+
+async function create(_, args) {
+  const { email, password } = args.data;
+
+  const {
+    accessToken,
+    refreshToken,
+    details,
+  } = await userController.create({ email, password });
+
+  if (details) {
+    throw new UserInputError(details, { details });
+  }
+
+  return {
+    accessToken,
+    refreshToken,
+  };
+}
+
+async function refresh(_, args) {
+  const { refreshToken } = args;
+
+  const {
+    accessToken,
+    refreshToken: refreshTokenNew,
+  } = await verifyToken(refreshToken).catch((e) => {
+    throw new UserInputError({ detail: e });
+  });
+
+  return {
+    accessToken,
+    refreshToken: refreshTokenNew,
+  };
+}
+
 const typeDef = `
   extend type Query {
     users: [User]
@@ -28,7 +92,17 @@ const typeDef = `
     profile: User
   }
 
-  type User {
+  input LoginInput {
+    email: String!
+    password: String!
+  }
+
+  type Tokens {
+    accessToken: String
+    refreshToken: String
+  }
+
+  type User @auth {
     id: Int
     email: String
     avatar: String
@@ -41,6 +115,12 @@ const typeDef = `
     createdAt: String
     updatedAt: String
   }
+
+  extend type Mutation {
+    login(data: LoginInput): Tokens
+    register(data: LoginInput): Tokens
+    refresh(refreshToken: String): Tokens
+  }
 `;
 
 const resolvers = {
@@ -48,6 +128,12 @@ const resolvers = {
     users: getUsersList,
     user: getUser,
     profile: getProfile,
+  },
+
+  Mutation: {
+    login,
+    register: create,
+    refresh,
   },
 };
 

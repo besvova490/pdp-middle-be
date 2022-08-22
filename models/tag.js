@@ -3,7 +3,12 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class Tag extends Model {
     static associate(models) {
-      Tag.belongsToMany(models.Post, { as: 'posts', through: 'PostTag' });
+      Tag.belongsToMany(models.Post, {
+        as: 'posts',
+        through: 'PostTags',
+        foreignKey: 'tagId',
+        onDelete: 'CASCADE',
+      });
     }
   }
   Tag.init({

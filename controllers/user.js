@@ -34,15 +34,13 @@ module.exports = {
     }
   },
 
-  create: async (req, res, next) => {
+  create: async ({ email, password }) => {
     const transaction = await sequelize.transaction();
 
     try {
-      const { email, password } = req.body;
-
       const user = await User.findAll({ where: { email } });
 
-      if (user.length) return res.status(400).json({ details: 'User with such email already exist' });
+      if (user.length) return { details: 'User with such email already exist', status: 400 };
 
       const newProfile = await UserProfile.create({
         userName: `user-${uuidv4()}`,
@@ -58,11 +56,11 @@ module.exports = {
 
       await transaction.commit();
 
-      res.status(201).json({ accessToken, refreshToken });
+      return { accessToken, refreshToken, status: 201 };
     } catch (e) {
       await transaction.rollback();
 
-      next(new Error(e.message));
+      throw new Error(e.message);
     }
   },
 
@@ -92,20 +90,18 @@ module.exports = {
     }
   },
 
-  login: async (req, res, next) => {
+  login: async ({ email, password }) => {
     try {
-      const { email, password } = req.body;
-
       const user = await User.findOne({ where: { email } });
 
-      if (!user) return res.status(404).json({ details: 'User not found' });
-      if (!bcrypt.compareSync(password, user.password)) return res.status(403).json({ password: 'Invalid password' });
+      if (!user) return { details: 'User not found', error: true };
+      if (!bcrypt.compareSync(password, user.password)) return { password: 'Invalid password', error: true };
 
       const { accessToken, refreshToken } = generateTokens({ id: user.id, email });
 
-      res.status(200).json({ accessToken, refreshToken });
+      return { accessToken, refreshToken };
     } catch (e) {
-      next(new Error(e.message));
+      throw new Error(e.message);
     }
   },
 

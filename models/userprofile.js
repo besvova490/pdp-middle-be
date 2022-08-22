@@ -4,14 +4,16 @@ module.exports = (sequelize, DataTypes) => {
   class UserProfile extends Model {
     static associate(models) {
       UserProfile.hasMany(models.Comment, {
+        foreignKey: 'id',
         onDelete: 'CASCADE',
       });
-      UserProfile.hasOne(models.UserProfile, {
+      UserProfile.hasOne(models.User, {
         foreignKey: 'id',
         onDelete: 'CASCADE',
       });
       UserProfile.hasMany(models.Post, {
         onDelete: 'CASCADE',
+        foreignKey: 'id',
       });
     }
   }

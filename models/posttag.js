@@ -1,19 +1,18 @@
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
-  class Comment extends Model {
-    static associate(models) {
-      Comment.belongsTo(models.Post, {
-        as: 'post',
-      });
-      Comment.belongsTo(models.UserProfile, {
-        as: 'author',
-      });
-    }
-  }
+  class PostTag extends Model {
 
-  Comment.init({
-    body: DataTypes.STRING,
+  }
+  PostTag.init({
+    id: {
+      allowNull: false,
+      autoIncrement: true,
+      primaryKey: true,
+      type: DataTypes.INTEGER,
+    },
+    postId: DataTypes.INTEGER,
+    tagId: DataTypes.INTEGER,
     createdAt: {
       type: 'TIMESTAMP',
       defaultValue: sequelize.literal('CURRENT_TIMESTAMP(3)'),
@@ -28,7 +27,7 @@ module.exports = (sequelize, DataTypes) => {
     },
   }, {
     sequelize,
-    modelName: 'Comment',
+    modelName: 'PostTag',
   });
-  return Comment;
+  return PostTag;
 };

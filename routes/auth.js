@@ -13,8 +13,41 @@ const { verifyToken } = require('../helpers/jwtTokensHelpers');
 
 const authRouter = Router();
 
-authRouter.post('/', userController.login);
-authRouter.post('/register', validation(userValidation.create), userController.create);
+authRouter.post('/', async (req, res, next) => {
+  try {
+    const { email, password } = req.user;
+
+    const {
+      accessToken,
+      refreshToken,
+      error,
+      password: passwordError,
+      details,
+    } = await userController.login({ email, password });
+
+    if (error && details) {
+      return res.status(404).json({ details });
+    }
+    if (error && passwordError) {
+      return res.status(403).json({ password: passwordError });
+    }
+
+    return res.status(200).json({ accessToken, refreshToken });
+  } catch (e) {
+    next(new Error(e.message));
+  }
+});
+authRouter.post('/register', validation(userValidation.create), async (req, res, next) => {
+  try {
+    const { email, password } = req.user;
+
+    const { status, ...rest } = await userController.create({ email, password });
+
+    res.status(status).json(rest);
+  } catch (e) {
+    next(new Error(e.message));
+  }
+});
 
 authRouter.get('/profile', authMiddleware, async (req, res, next) => {
   try {

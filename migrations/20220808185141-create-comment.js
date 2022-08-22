@@ -24,6 +24,15 @@ module.exports = {
         },
         onDelete: 'CASCADE',
       },
+      postId: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'Posts',
+          key: 'id',
+        },
+        onDelete: 'CASCADE',
+      },
       updatedAt: {
         allowNull: false,
         type: Sequelize.DATE,

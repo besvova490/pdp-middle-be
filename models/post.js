@@ -4,16 +4,19 @@ module.exports = (sequelize, DataTypes) => {
   class Post extends Model {
     static associate(models) {
       Post.belongsTo(models.UserProfile, {
+        foreignKey: 'authorId',
         as: 'author',
-        foreignKey: 'id',
       });
       Post.hasMany(models.Comment, {
+        foreignKey: 'id',
         as: 'comments',
         onDelete: 'CASCADE',
       });
       Post.belongsToMany(models.Tag, {
         as: 'tags',
-        through: 'PostTag',
+        foreignKey: 'postId',
+        through: 'PostTags',
+        onDelete: 'CASCADE',
       });
     }
   }
@@ -39,9 +42,6 @@ module.exports = (sequelize, DataTypes) => {
     },
     location: {
       type: DataTypes.STRING,
-    },
-    authorId: {
-      type: DataTypes.INTEGER,
     },
     createdAt: {
       type: 'TIMESTAMP',

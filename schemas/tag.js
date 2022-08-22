@@ -44,8 +44,8 @@ async function deleteTag({ name, id }) {
 }
 
 const typeDef = `
-  type Tag {
-    id: Int!
+  type Tag @auth {
+    id: Int
     name: String
     createdAt: String
     updatedAt: String
@@ -57,8 +57,8 @@ const typeDef = `
   }
 
   extend type Mutation {
-    createTag(name: String): Tag
-    deleteTag(name: String, id: Int): Int
+    createTag(name: String): Tag @auth
+    deleteTag(name: String, id: Int): Int @auth
   }
 `;
 

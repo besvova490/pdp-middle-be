@@ -18,16 +18,18 @@ function generateTokens({ id, email }) {
   return { accessToken, refreshToken };
 }
 
-function verifyToken(refreshToken, callback, errorCallback) {
-  JWT.verify(refreshToken, process.env.EXPRESS_APP_JWT_REFRESH_SECRET, async (e, user) => {
-    if (e) return errorCallback(e);
+function verifyToken(refreshToken) {
+  return new Promise((resolve, reject) => {
+    JWT.verify(refreshToken, process.env.EXPRESS_APP_JWT_REFRESH_SECRET, (e, user) => {
+      if (e) reject(e);
 
-    const {
-      accessToken,
-      refreshToken: refreshTokenNew,
-    } = generateTokens({ id: user.id, email: user.email });
+      const {
+        accessToken,
+        refreshToken: refreshTokenNew,
+      } = generateTokens({ id: user.id, email: user.email });
 
-    return callback({ accessToken, refreshToken: refreshTokenNew });
+      return resolve({ accessToken, refreshToken: refreshTokenNew });
+    });
   });
 }
 

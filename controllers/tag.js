@@ -28,6 +28,8 @@ module.exports = {
             { name },
           ],
         },
+        raw: true,
+        nest: true,
       });
 
       return tag;
@@ -38,7 +40,7 @@ module.exports = {
 
   getList: async () => {
     try {
-      const tagsList = await Tag.findAll();
+      const tagsList = await Tag.findAll({ raw: true, nest: true });
 
       return tagsList;
     } catch (e) {

@@ -1,8 +1,6 @@
-const { ApolloServer } = require('apollo-server-express');
 require('dotenv').config();
 
-// middleware
-const authMiddlewareGQL = require('../middleware/protectGQL');
+const { ApolloServer } = require('apollo-server-express');
 
 // schemas
 const schema = require('../schemas');
@@ -10,7 +8,7 @@ const schema = require('../schemas');
 async function startGQLServer(app) {
   const apolloServer = new ApolloServer({
     schema,
-    context: authMiddlewareGQL,
+    context: ({ req }) => ({ req }),
     formatError: (err) => {
       // Don't give the specific errors to the client.
       if (err.message.startsWith('Database Error: ')) {

@@ -6,6 +6,9 @@ const userSchema = require('./user');
 const tagSchema = require('./tag');
 const postSchema = require('./post');
 
+// helpers
+const authDirective = require('../middleware/authDirective');
+
 const Query = `
   type Query {
     _empty: String
@@ -16,11 +19,20 @@ const Query = `
   }
 `;
 
+const { authDirectiveTypeDefs, authDirectiveTransformer } = authDirective('auth');
+
 const resolvers = {};
+const typeDefs = [
+  authDirectiveTypeDefs,
+  Query,
+  userSchema.typeDef,
+  tagSchema.typeDef,
+  postSchema.typeDef,
+];
 
 const schema = makeExecutableSchema({
-  typeDefs: [Query, userSchema.typeDef, tagSchema.typeDef, postSchema.typeDef],
+  typeDefs,
   resolvers: merge(resolvers, userSchema.resolvers, tagSchema.resolvers, postSchema.resolvers),
 });
 
-module.exports = schema;
+module.exports = authDirectiveTransformer(schema);
