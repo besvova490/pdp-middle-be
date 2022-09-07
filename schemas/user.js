@@ -1,4 +1,4 @@
-const { UserInputError } = require('apollo-server-errors');
+const { UserInputError, ApolloError } = require('apollo-server-errors');
 
 //  controller
 const userController = require('../controllers/user');
@@ -12,13 +12,13 @@ async function getUsersList() {
   return resp;
 }
 
-async function getUser(parent, args) {
+async function getUser(_, args) {
   const resp = await userController.getUser(args);
 
   return resp;
 }
 
-async function getProfile(parent, args, context) {
+async function getProfile(_, args, context) {
   const { user } = context;
 
   const resp = await userController.getUser({ id: user.id, email: user.email });
@@ -76,7 +76,7 @@ async function refresh(_, args) {
     accessToken,
     refreshToken: refreshTokenNew,
   } = await verifyToken(refreshToken).catch((e) => {
-    throw new UserInputError({ detail: e });
+    throw new UserInputError(e.message, { detail: e });
   });
 
   return {
@@ -85,11 +85,30 @@ async function refresh(_, args) {
   };
 }
 
+async function updateProfile(_, args, context) {
+  const { user, updated } = await userController.update({ id: context.user.id, ...args.data })
+    .catch((e) => {
+      throw new UserInputError(e.message, { detail: e });
+    });
+
+  if (!updated) {
+    throw new ApolloError(
+      'Such user is not exist',
+      'PERSISTED_QUERY_NOT_FOUND',
+      {
+        details: 'Such user is not exist',
+      },
+    );
+  }
+
+  return user;
+}
+
 const typeDef = `
   extend type Query {
-    users: [User]
-    user(id: Int!): User
-    profile: User
+    users: [User] @auth
+    user(id: Int!): User @auth
+    profile: User @auth
   }
 
   input LoginInput {
@@ -97,12 +116,23 @@ const typeDef = `
     password: String!
   }
 
+  input ProfileInput {
+    email: String
+    avatar: String
+    thumbnailImage: String
+    userName: String
+    fullName: String
+    description: String
+    address: String
+    phone: String
+  }
+
   type Tokens {
     accessToken: String
     refreshToken: String
   }
 
-  type User @auth {
+  type User {
     id: Int
     email: String
     avatar: String
@@ -120,6 +150,7 @@ const typeDef = `
     login(data: LoginInput): Tokens
     register(data: LoginInput): Tokens
     refresh(refreshToken: String): Tokens
+    profile(data: ProfileInput): User @auth
   }
 `;
 
@@ -134,6 +165,7 @@ const resolvers = {
     login,
     register: create,
     refresh,
+    profile: updateProfile,
   },
 };
 

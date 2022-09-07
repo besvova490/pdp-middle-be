@@ -13,6 +13,12 @@ module.exports = (sequelize, DataTypes) => {
   }
 
   Comment.init({
+    id: {
+      allowNull: false,
+      autoIncrement: true,
+      primaryKey: true,
+      type: DataTypes.INTEGER,
+    },
     body: DataTypes.STRING,
     createdAt: {
       type: 'TIMESTAMP',

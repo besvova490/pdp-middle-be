@@ -2,7 +2,6 @@ require('dotenv').config();
 
 const { defaultFieldResolver } = require('graphql');
 const { mapSchema, MapperKind, getDirective } = require('@graphql-tools/utils');
-
 const { AuthenticationError } = require('apollo-server-express');
 const JWT = require('jsonwebtoken');
 
@@ -26,7 +25,7 @@ const authDirective = (directiveName) => {
         ?? typeDirectiveArgumentMaps[typeName];
 
         if (isAuthDirective) {
-          const { resolve = defaultFieldResolver } = fieldConfig;
+          const originalResolver = fieldConfig.resolve ?? defaultFieldResolver;
           fieldConfig.resolve = (source, args, context, info) => {
             const authToken = context.req.headers.authorization;
             const token = authToken && authToken.split(' ')[1];
@@ -36,7 +35,7 @@ const authDirective = (directiveName) => {
             return JWT.verify(token, process.env.EXPRESS_APP_JWT_ACCESS_SECRET, (e, user) => {
               if (e) throw new AuthenticationError(e);
 
-              return resolve(source, args, { ...(context || {}), user }, info);
+              return originalResolver(source, args, { ...(context || {}), user }, info);
             });
           };
 

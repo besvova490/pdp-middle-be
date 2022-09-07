@@ -15,6 +15,14 @@ async function getPostsList() {
   return resp;
 }
 
+async function getUserPosts(_, args, context) {
+  const { user } = context;
+
+  const resp = await postController.getAllUserPosts(user.id);
+
+  return resp;
+}
+
 async function create(data, context) {
   const { user } = context;
 
@@ -112,6 +120,7 @@ const typeDef = `
   extend type Query {
     posts: [Post]
     post(id: Int!): Post
+    myPosts: [Post] @auth
   }
 
   input CreatePostInput {
@@ -142,6 +151,7 @@ const resolvers = {
   Query: {
     posts: getPostsList,
     post: getPost,
+    myPosts: getUserPosts,
   },
 
   Post: {
@@ -149,7 +159,7 @@ const resolvers = {
   },
 
   Mutation: {
-    createPost: (_, data, context) => create(data, context),
+    createPost: (_, args, context) => create(args.data, context),
     updatePost: (_, data) => update(data),
     deletePost: (_, data) => deletePost(data),
     addComment: (_, data, context) => addComment(data, context),

@@ -40,7 +40,11 @@ module.exports = {
     try {
       const user = await User.findAll({ where: { email } });
 
-      if (user.length) return { details: 'User with such email already exist', status: 400 };
+      if (user.length) {
+        await transaction.rollback();
+
+        return { details: 'User with such email already exist', status: 400 };
+      }
 
       const newProfile = await UserProfile.create({
         userName: `user-${uuidv4()}`,
@@ -79,12 +83,12 @@ module.exports = {
   update: async ({ id, ...rest }) => {
     try {
       const user = await User.findOne({ where: { id } });
-      if (!user) return 0;
+      if (!user) return { user: null, updated: false };
 
       const profile = await user.getUserProfile();
       const resp = await profile.update(rest);
 
-      return resp;
+      return { user: resp, updated: true };
     } catch (e) {
       throw new Error(e.message);
     }
@@ -132,7 +136,9 @@ module.exports = {
 
       if (!user) return null;
 
-      return removeNested(user.toJSON(), {}, ['UserProfileId']);
+      const profileToReturn = removeNested(user.toJSON(), {}, ['UserProfileId']);
+
+      return { ...profileToReturn, id: user.UserProfileId };
     } catch (e) {
       throw new Error(e.message);
     }

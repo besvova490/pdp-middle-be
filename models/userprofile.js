@@ -38,14 +38,12 @@ module.exports = (sequelize, DataTypes) => {
     phone: DataTypes.STRING,
     createdAt: {
       type: 'TIMESTAMP',
-      defaultValue: sequelize.literal('CURRENT_TIMESTAMP(3)'),
+      defaultValue: new Date(),
       allowNull: false,
     },
     updatedAt: {
       type: 'TIMESTAMP',
-      defaultValue: sequelize.literal(
-        'CURRENT_TIMESTAMP(3)',
-      ),
+      defaultValue: new Date(),
       allowNull: false,
     },
   }, {

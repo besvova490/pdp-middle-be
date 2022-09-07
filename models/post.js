@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
         as: 'author',
       });
       Post.hasMany(models.Comment, {
-        foreignKey: 'id',
+        foreignKey: 'postId',
         as: 'comments',
         onDelete: 'CASCADE',
       });
@@ -37,7 +37,7 @@ module.exports = (sequelize, DataTypes) => {
       unique: true,
     },
     description: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: false,
     },
     location: {

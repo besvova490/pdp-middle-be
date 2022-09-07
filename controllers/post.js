@@ -149,6 +149,38 @@ module.exports = {
     }
   },
 
+  addComment: async ({ postId, comment, authorId }) => {
+    const transaction = await sequelize.transaction();
+
+    try {
+      const post = await Post.findOne({ where: { id: postId } });
+
+      if (!post) {
+        await transaction.rollback();
+        return null;
+      }
+
+      const newComment = await Comment.create({
+        body: comment,
+        postId,
+        authorId,
+      });
+
+      console.log(newComment);
+
+      await post.addComment(newComment);
+
+      await transaction.commit();
+
+      return true;
+    } catch (e) {
+      console.log(e);
+      await transaction.rollback();
+
+      throw new Error(e.message);
+    }
+  },
+
   getAll: async () => {
     try {
       const posts = await Post.findAll({
@@ -173,28 +205,27 @@ module.exports = {
     }
   },
 
-  addComment: async ({ postId, comment, authorId }) => {
-    const transaction = await sequelize.transaction();
-
+  getAllUserPosts: async (userId) => {
     try {
-      const post = await Post.findOne({ where: { id: postId } });
-
-      if (!post) return null;
-
-      const newComment = await Comment.create({
-        body: comment,
-        postId,
-        authorId,
+      const posts = await Post.findAll({
+        where: { authorId: userId },
+        include: [
+          { model: UserProfile, as: 'author', include: [User] },
+          { model: Tag, as: 'tags' },
+        ],
       });
 
-      await post.addComment(newComment);
+      const postsList = posts.map((item) => {
+        const itemToReturn = item.toJSON();
 
-      await transaction.commit();
+        return {
+          ...itemToReturn,
+          author: removeNested(itemToReturn.author, {}, ['UserProfileId', 'password']),
+        };
+      });
 
-      return true;
+      return postsList;
     } catch (e) {
-      await transaction.rollback();
-
       throw new Error(e.message);
     }
   },

@@ -15,7 +15,7 @@ const authRouter = Router();
 
 authRouter.post('/', async (req, res, next) => {
   try {
-    const { email, password } = req.user;
+    const { email, password } = req.body;
 
     const {
       accessToken,
