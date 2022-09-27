@@ -13,6 +13,10 @@ const router = require('./routes');
 // service
 const startGQLServer = require('./services/gql-server');
 const { connectionCheck } = require('./services/postgres');
+const startSocketServer = require('./services/socket');
+
+// controllers
+const onConnection = require('./socketControllers');
 
 // cors settings
 app.use(cors({
@@ -30,6 +34,9 @@ const server = http.createServer(app);
 
 connectionCheck().then(() => {
   startGQLServer(app);
+  const io = startSocketServer(server);
+  io.on('connection', (socket) => onConnection(io, socket));
+
   server.listen(process.env.EXPRESS_APP_PORT, () => {
     console.log(`listening on *:
   http://localhost:${process.env.EXPRESS_APP_PORT}/api

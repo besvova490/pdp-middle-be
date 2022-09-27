@@ -2,7 +2,10 @@ const bcrypt = require('bcrypt');
 const { v4: uuidv4 } = require('uuid');
 const { Op } = require('sequelize');
 
-//  models
+// services
+const { sessionStore } = require('../services/redis');
+
+// models
 const DB = require('../models');
 
 // helpers
@@ -28,7 +31,10 @@ module.exports = {
 
       if (!user) return null;
 
-      return removeNested(user.toJSON(), {}, ['UserProfileId']);
+      const session = await sessionStore.findSession(user.id);
+      const profileToReturn = removeNested(user.toJSON(), {}, ['UserProfileId']);
+
+      return { ...profileToReturn, id: user.UserProfileId, online: !!session?.connected };
     } catch (e) {
       throw new Error(e.message);
     }
@@ -120,25 +126,19 @@ module.exports = {
     }
   },
 
-  getUser: async ({ id = 0, email = '' }) => {
+  search: async (query) => {
     try {
-      const user = await User.findOne(
-        {
-          where: {
-            [Op.or]: [
-              { id },
-              { email },
-            ],
-          },
-          include: UserProfile,
-        },
-      );
+      const users = await UserProfile.findAll({ where: { userName: { [Op.like]: `%${query}%` } }, include: User });
 
-      if (!user) return null;
+      const userList = users.map(async (item) => {
+        const session = await sessionStore.findSession(item.id);
 
-      const profileToReturn = removeNested(user.toJSON(), {}, ['UserProfileId']);
-
-      return { ...profileToReturn, id: user.UserProfileId };
+        return {
+          ...removeNested(item.toJSON(), {}, ['UserProfileId']),
+          online: !!session,
+        };
+      });
+      return userList;
     } catch (e) {
       throw new Error(e.message);
     }

@@ -13,7 +13,7 @@ async function getUsersList() {
 }
 
 async function getUser(_, args) {
-  const resp = await userController.getUser(args);
+  const resp = await userController.get(args);
 
   return resp;
 }
@@ -21,9 +21,17 @@ async function getUser(_, args) {
 async function getProfile(_, args, context) {
   const { user } = context;
 
-  const resp = await userController.getUser({ id: user.id, email: user.email });
+  const resp = await userController.get({ id: user.id, email: user.email });
 
   return resp;
+}
+
+async function searchUsers(_, args) {
+  const { query } = args;
+
+  const users = await userController.search(query);
+
+  return users;
 }
 
 async function login(_, args) {
@@ -109,6 +117,7 @@ const typeDef = `
     users: [User] @auth
     user(id: Int!): User @auth
     profile: User @auth
+    search(query: String): [User] @auth
   }
 
   input LoginInput {
@@ -142,6 +151,7 @@ const typeDef = `
     description: String
     address: String
     phone: String
+    online: Boolean
     createdAt: String
     updatedAt: String
   }
@@ -159,6 +169,7 @@ const resolvers = {
     users: getUsersList,
     user: getUser,
     profile: getProfile,
+    search: searchUsers,
   },
 
   Mutation: {

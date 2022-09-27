@@ -5,6 +5,7 @@ const { makeExecutableSchema } = require('@graphql-tools/schema');
 const userSchema = require('./user');
 const tagSchema = require('./tag');
 const postSchema = require('./post');
+const chatSchema = require('./chat');
 
 // helpers
 const authDirective = require('../middleware/authDirective');
@@ -21,18 +22,24 @@ const Query = `
 
 const { authDirectiveTypeDefs, authDirectiveTransformer } = authDirective('auth');
 
-const resolvers = {};
+const resolvers = [
+  userSchema.resolvers,
+  tagSchema.resolvers,
+  postSchema.resolvers,
+  chatSchema.resolvers,
+];
 const typeDefs = [
   authDirectiveTypeDefs,
   Query,
   userSchema.typeDef,
   tagSchema.typeDef,
   postSchema.typeDef,
+  chatSchema.typeDef,
 ];
 
 const schema = makeExecutableSchema({
   typeDefs,
-  resolvers: merge(resolvers, userSchema.resolvers, tagSchema.resolvers, postSchema.resolvers),
+  resolvers: merge({}, ...resolvers),
 });
 
 module.exports = authDirectiveTransformer(schema);

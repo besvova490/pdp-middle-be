@@ -15,6 +15,11 @@ module.exports = (sequelize, DataTypes) => {
         onDelete: 'CASCADE',
         foreignKey: 'id',
       });
+      UserProfile.hasMany(models.Chat, {
+        onDelete: 'CASCADE',
+        foreignKey: 'id',
+        as: 'chats',
+      });
     }
   }
 
