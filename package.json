@@ -7,7 +7,7 @@
     "node": ">=14.17.6"
   },
   "scripts": {
-    "start": "node index npm run migrate",
+    "start": "npm run migrate node index",
     "dev": "nodemon index",
     "migrate": "npx sequelize-cli db:migrate",
     "lint": "./node_modules/.bin/eslint .",
