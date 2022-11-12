@@ -9,6 +9,7 @@ const InMemoryVideoSession = require('./videoSessionStore');
 const redisClient = new Redis({
   password: process.env.EXPRESS_APP_REDIS_PASSWORD,
   host: process.env.EXPRESS_APP_REDIS_HOST,
+  username: process.env.EXPRESS_APP_REDIS_USERNAME,
 });
 
 const sessionStore = new InMemorySessionStore(redisClient);
