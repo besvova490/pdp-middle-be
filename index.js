@@ -29,7 +29,7 @@ app.use(express.json());
 app.use(methodOverride());
 app.use('/api', router);
 
-// server init...
+// server init
 const server = http.createServer(app);
 
 connectionCheck().then(() => {
