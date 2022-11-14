@@ -1,7 +1,11 @@
 const { UserInputError, ApolloError } = require('apollo-server-errors');
+const { withFilter } = require('graphql-subscriptions');
 
 //  controller
 const postController = require('../controllers/post');
+
+// services
+const PubSub = require('../services/pub-sub');
 
 async function getPost(_, data) {
   const resp = await postController.get(data);
@@ -87,6 +91,8 @@ async function addComment(data, context) {
     );
   }
 
+  PubSub.publish('COMMENTS_SUBSCRIPTION', { newCommentAtPost: resp });
+
   return id;
 }
 
@@ -102,6 +108,15 @@ const typeDef = `
     createdAt: String
     updatedAt: String
     author: User
+  }
+
+  type CommentNotification {
+    id: Int!
+    body: String!
+    createdAt: String!
+    author: Int!
+    postTitle: String!
+    postId: Int!
   }
 
   type Post @auth {
@@ -145,6 +160,10 @@ const typeDef = `
     deletePost(id: Int!): Int @auth
     addComment(id: Int!, comment: String!): Int @auth
   }
+
+  extend type Subscription {
+    newCommentAtPost: CommentNotification
+  }
 `;
 
 const resolvers = {
@@ -163,6 +182,15 @@ const resolvers = {
     updatePost: (_, data) => update(data),
     deletePost: (_, data) => deletePost(data),
     addComment: (_, data, context) => addComment(data, context),
+  },
+
+  Subscription: {
+    newCommentAtPost: {
+      subscribe: withFilter(
+        () => PubSub.asyncIterator('COMMENTS_SUBSCRIPTION'),
+        (data, _, context) => (data.newCommentAtPost.author === context.user.id),
+      ),
+    },
   },
 };
 

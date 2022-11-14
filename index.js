@@ -20,7 +20,7 @@ const onConnection = require('./socketControllers');
 
 // cors settings
 app.use(cors({
-  origin: process.env.EXPRESS_APP_FE_HOST,
+  origin: process.env.EXPRESS_FE_APP_URL,
   credentials: true,
 }));
 
@@ -33,7 +33,7 @@ app.use('/api', router);
 const server = http.createServer(app);
 
 connectionCheck().then(() => {
-  startGQLServer(app);
+  startGQLServer(app, server);
   const io = startSocketServer(server);
   io.on('connection', (socket) => onConnection(io, socket));
 

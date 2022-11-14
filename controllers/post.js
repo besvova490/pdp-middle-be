@@ -153,7 +153,12 @@ module.exports = {
     const transaction = await sequelize.transaction();
 
     try {
-      const post = await Post.findOne({ where: { id: postId } });
+      const post = await Post.findOne({
+        where: { id: postId },
+        include: [
+          { model: UserProfile, as: 'author', include: [User] },
+        ],
+      });
 
       if (!post) {
         await transaction.rollback();
@@ -166,15 +171,21 @@ module.exports = {
         authorId,
       });
 
-      console.log(newComment);
-
       await post.addComment(newComment);
 
       await transaction.commit();
 
-      return true;
+      const postJson = post.toJSON();
+
+      return {
+        id: newComment.id,
+        body: comment,
+        createdAt: newComment.createdAt,
+        author: postJson.author.id,
+        postId: postJson.id,
+        postTitle: postJson.title,
+      };
     } catch (e) {
-      console.log(e);
       await transaction.rollback();
 
       throw new Error(e.message);

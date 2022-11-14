@@ -102,12 +102,16 @@ module.exports = {
 
   login: async ({ email, password }) => {
     try {
-      const user = await User.findOne({ where: { email } });
+      const user = await User.findOne({
+        where: { email },
+        include: UserProfile,
+      });
 
       if (!user) return { details: 'User not found', error: true };
       if (!bcrypt.compareSync(password, user.password)) return { password: 'Invalid password', error: true };
 
-      const { accessToken, refreshToken } = generateTokens({ id: user.id, email });
+      const profileToReturn = removeNested(user.toJSON(), {}, ['UserProfileId']);
+      const { accessToken, refreshToken } = generateTokens({ id: profileToReturn.id, email: `${email}-12` });
 
       return { accessToken, refreshToken };
     } catch (e) {
